@@ -30,7 +30,7 @@ float color[][3] = {
 	{0.0f, 0.0f, 0.3f},
 	{0.0f, 0.0f, 0.2f},
 	{1.0f, 0.6f, 0.0f}, // laranja
-	
+
 };
 
 int letras[][10][10] = {
@@ -83,7 +83,7 @@ int letras[][10][10] = {
 		{0,0,0,0,0,0,0,0,0,0},
 	},
 };
-
+Object* objectk;
 int main(int argc,char* argv[])
 {
 	create_window(300, 300, 8, false);
@@ -92,7 +92,18 @@ int main(int argc,char* argv[])
 	}
 	return 0;
 }
-
+Object* getObjMain()
+{
+    std::vector<Object*>::iterator iter;
+	for (iter = objects.begin(); iter != objects.end(); ++iter) {
+	Object* object = *iter;
+           if (object->get_name() == "main")
+              {
+               return object;
+               break;
+               }
+        }
+}
 void create_window(int width, int height, int bpp, bool fullscreen)
 {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -127,7 +138,7 @@ void create_window(int width, int height, int bpp, bool fullscreen)
         Object* object = *iter;
         object->set_name("main");
     }
-
+    objectk =  getObjMain();
 	atexit(SDL_Quit);
 }
 
@@ -157,18 +168,7 @@ void draw_table(int xa,int ya, int id)
 	}
 	glEnd();
 }
-Object* getObjMain()
-{
-    std::vector<Object*>::iterator iter;
-	for (iter = objects.begin(); iter != objects.end(); ++iter) {
-	Object* object = *iter;
-           if (object->get_name() == "main")
-              {
-               return object;
-               break;
-               }
-        }	
-};
+
 int ax,ay,aid;
 bool add;
 void process_events()
@@ -187,7 +187,7 @@ void process_events()
             if (y <= 10){
                 ax = x;
                 ay = y;
-                aid = 4; 
+                aid = 4;
                 add = true;
                 delete[] &iter;
                 deleted = true;
@@ -201,57 +201,61 @@ void process_events()
             int cyc = object->get_cycle();
             if (cyc > 1)
             {
-               object->set_cycle(cyc-1);                  
+               object->set_cycle(cyc-1);
             }else{
                 delete[] &iter;
                 deleted = true;
             }
        }
+    glBegin(GL_POINTS);
+	glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
+	glVertex2d(100, 100);
+    glEnd();
         if (!deleted)
         {
           draw_table(x,y,id);
         }
 	}
-	if (add){	objects.push_back(new Object(ax, ay, aid));} 
+	if (add){	objects.push_back(new Object(ax, ay, aid));}
 	if (eml)
 	{
-       Object* object = getObjMain();       
+       Object* object = getObjMain();
 	   object->set_x(object->get_x()-2);
-	   if (object->get_x() <= -5*ampl){object->set_x(300-(5*ampl));}     
+	   if (object->get_x() <= -5*ampl){object->set_x(300-(5*ampl));}
     }else if(emr){
-       Object* object = getObjMain();       
+       Object* object = getObjMain();
 	   object->set_x(object->get_x()+2);
-	   if (object->get_x() >= 300-(5*ampl)){object->set_x(-5*ampl);}   
+	   if (object->get_x() >= 300-(5*ampl)){object->set_x(-5*ampl);}
     }
 	glEnable(GL_TEXTURE_2D);
 	SDL_GL_SwapBuffers();
 	while (SDL_PollEvent(&event) != 0) {
 		switch (event.type) {
 			case SDL_KEYUP:
-            	switch(event.key.keysym.sym) {     
+            	switch(event.key.keysym.sym) {
 				case SDLK_LEFT:
 					eml = false;
 					break;
 				case SDLK_RIGHT:
 					emr = false;
-					break;                      
-				
+					break;
+
 			}
 		 	break;
             case SDL_KEYDOWN:
 				switch(event.key.keysym.sym) {
 					case SDLK_SPACE:
-                    	Object* object =  getObjMain();       
-						objects.push_back(new Object(object->get_x(), object->get_y()-(10*ampl), 3));
-                        break; 
+
+						objects.push_back(new Object(objectk->get_x(), objectk->get_y()-(10*ampl), 3));
+                        break;
 					case SDLK_LEFT:
                         eml = true;
                         break;
 					case SDLK_RIGHT:
                         emr = true;
-                        break;                      
+                        break;
 			  };
-              break;			
+              break;
 			case SDL_QUIT:
 				exit(0);
 				break;

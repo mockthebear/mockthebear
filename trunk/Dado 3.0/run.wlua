@@ -23,6 +23,13 @@ G_PASS = nil
 G_MPASS = nil
 G_CODE =nil
 --get Server:
+function createADownload()
+	local gauge = iup.gauge{value=0.3}
+	gauge.show_text = "YES"
+	local dlg = iup.dialog{gauge; title = "Loading"}
+	dlg:showxy(iup.CENTER, iup.CENTER)
+	return gauge,dlg
+end
 function callConect(skipa)
 	frm = nil
 	frm2 = nil
@@ -114,6 +121,11 @@ end
 function getFirstByte()
 	connect:settimeout(10)
 	local dat,err = connect:receive()
+	if not dat then
+		connect:close()
+		connect = false
+		return false
+	end
 	if dat:match('w(.+)') then
 		iup.Message('Warning!',dat:match('w(.+)'):gsub('#','\n'))
 		connect:close()
@@ -171,6 +183,7 @@ local function callNew()
 		local v
 		local kontrol = iup.olecontrol{"Shell.Explorer.2"}
 		kontrol:CreateLuaCOM()
+
 		v = iup.vbox{
 			iup.hbox{
 				iup.label{title='('..idare..') Data from: '},iup.label{title=m,FONT='HELVETICA_BOLD_8'},
@@ -205,12 +218,11 @@ local function callNew()
 											local c = connect:receive()
 											connect:settimeout(0.01)
 											if c == '1' then
-												local s = 500
-												for i=0,math.floor(f:len()/s)+1 do
-													local c = f:sub((i*s)+1,(i+1)*s)
-													if c:len() >= 1 then
-														connect:send(c..'\n')
-													end
+												local gag,dga = createADownload()
+
+												local now_size = 0
+												while true do
+													connect:send(f:sub(now_size,-1))
 													connect:settimeout(10)
 													local a,er = connect:receive()
 													if a == 'K' then
@@ -218,8 +230,12 @@ local function callNew()
 														print('UU',c)
 														connect:settimeout(0.01)
 														break
+													elseif a and a:match('F:(%d+)') then
+														now_size = tonumber(a:match('F:(%d+)'))
+														gag.value = (now_size/f:len())
 													end
 												end
+												dga:destroy()
 												connect:settimeout(0.01)
 												tabs[idare].vaca = dat
 											else
@@ -239,6 +255,7 @@ local function callNew()
 				}
 			}
 		}
+
 		v.tabtitle=idare..'º           '
 		kontrol.com:Navigate("about:"..m2)
 		v.vaca = m2
@@ -326,6 +343,64 @@ local function callNew()
 			tabs[l][2][1][1].com:Navigate("about:"..tabs[l].vaca)
 			tabs[l].vaco = nam
 			tabs[l].tabtitle = nam
+			tabs[l][2][1][2].action=function()
+				connect:send('M?\n')
+				connect:settimeout(10)
+				local a = connect:receive()
+				connect:settimeout(0.01)
+				if a == '1' then
+					local emile = iup.multiline{value=dat,size='300x200'}
+					local dia
+					local tet = iup.text{value=nam,size='100x'}
+					dia = iup.dialog{
+						title='Editing '..nam,
+						iup.frame{
+							iup.vbox{
+								iup.hbox{iup.label{title='Name:'},tet},
+								emile,
+								iup.button{title='Save',action=function()
+									local f = emile.value
+									if f:len() == 0 then
+										connect:send('CLEAR'..nam..'\n')
+									else
+										connect:send('dd'..f:len()..'|'..nam..'*'..tet.value..'\n')
+									end
+									connect:settimeout(10)
+									local c = connect:receive()
+									connect:settimeout(0.01)
+									if c == '1' then
+										local gag,dga = createADownload()
+										local now_size = 0
+										while true do
+											connect:send(f:sub(now_size,-1))
+											connect:settimeout(10)
+											local a,er = connect:receive()
+											if a == 'K' then
+												local c = connect:receive()
+												print('UU',c)
+												connect:settimeout(0.01)
+												break
+											elseif a and a:match('F:(%d+)') then
+												now_size = tonumber(a:match('F:(%d+)'))
+												gag.value = (now_size/f:len())
+											end
+										end
+										dga:destroy()
+										connect:settimeout(0.01)
+										--tabs[l].vaca = dat
+									else
+										iup.Message('Error',c:sub(2,c:len()))
+									end
+									dia:destroy()
+								end}
+							}
+						}
+					}
+					dia:showxy(iup.CENTER, iup.CENTER)
+				end
+			end
+			--tabs[l][2][1][2].action = function() os.exit() end
+
 		end
 		for l=l+1,10 do
 			tabs[l] = createTab('-','',l,tabs)
@@ -362,6 +437,7 @@ local function callNew()
 				ml.insert=c..dat:match('%+(.+)'):gsub('#','\n')..'\n'
 			elseif dat:sub(1,1) == 'w' then
 				iup.Message('Warning!',dat:sub(2,dat:len()):gsub('#','\n'))
+			elseif dat:match('%#@(.-)*(.+)') then --Update name
 			elseif dat:match('Y') then
 				updateTabs()
 			elseif dat:match('S') then
@@ -450,24 +526,29 @@ local function callNew()
 															local c = connect:receive()
 															connect:settimeout(0.01)
 															if c == '1' then
-																local s = 500
-																for i=0,math.floor(f:len()/s)+1 do
-																	local c = f:sub((i*s)+1,(i+1)*s)
-																	if c:len() >= 1 then
-																		connect:send(c..'\n')
-																	end
+																local gag,dga = createADownload()
+																local now_size = 0
+																while true do
+																	connect:send(f:sub(now_size,-1))
 																	connect:settimeout(10)
 																	local a,er = connect:receive()
 																	if a == 'K' then
 																		local c = connect:receive()
+																		print('UU',c)
 																		connect:settimeout(0.01)
 																		break
+																	elseif a and a:match('F:(%d+)') then
+																		now_size = tonumber(a:match('F:(%d+)'))
+																		gag.value = (now_size/f:len())
 																	end
 																end
+																dga:destroy()
 																connect:settimeout(0.01)
 																control_.com:Navigate(site.."index.php?code="..G_CODE.."&pass="..G_PASS.."&select=1&t="..os.time())
 															else
-																iup.Message('Error','You are not the Master of the room.')
+																if c then
+																	iup.Message('Error',c:match('0(.+)') or '?')
+																end
 															end
 
 														end},
@@ -508,18 +589,18 @@ local function callNew()
 									local c = connect:receive()
 									connect:settimeout(0.01)
 									if c == '1' then
-										local s = 500
-										for i=0,f:len()/s do
-											local c = f:sub((i*s)+1,(i+1)*s)
-											if c:len() >= 1 then
-												connect:send(c..'\n')
-											end
+										local now_size = 0
+										while true do
+											connect:send(f:sub(now_size,-1))
 											connect:settimeout(10)
-											local c = connect:receive()
-											if c == 'K' then
+											local a,er = connect:receive()
+											if a == 'K' then
 												local c = connect:receive()
+												print('UU',c)
 												connect:settimeout(0.01)
 												break
+											elseif a and a:match('F:(%d+)') then
+												now_size = tonumber(a:match('F:(%d+)'))
 											end
 										end
 										connect:settimeout(0.01)
@@ -679,23 +760,23 @@ local function show_room()
 		else
 			pass,mpass =p,m
 		end
-			if (ret ~= 0 and pass) or p then
-			connect:send('PLX('..uu..')'..pass..','..(mpass == '' and 'a' or mpass)..'\n')
-			connect:settimeout(10)
-			local dat,err = connect:receive()
-			if dat == '1' then
-				G_PASS = pass
-				G_MPASS = (mpass == '' and 'a' or mpass)
-				G_CODE =uu
-				connect:settimeout(0.01)
-				returned=true
-				timer1.run = "NO"
-				dialog:destroy()
-			else
-				connect:settimeout(0.01)
-				iup.Message('Error',dat or err)
+			if (ret ~= 0 and pass) or p and pass:len() > 0 then
+				connect:send('PLX('..uu..')'..pass..','..(mpass == '' and '-' or mpass)..'\n')
+				connect:settimeout(10)
+				local dat,err = connect:receive()
+				if dat == '1' then
+					G_PASS = pass
+					G_MPASS = (mpass == '' and 'a' or mpass)
+					G_CODE =uu
+					connect:settimeout(0.01)
+					returned=true
+					timer1.run = "NO"
+					dialog:destroy()
+				else
+					connect:settimeout(0.01)
+					iup.Message('Error',dat or err)
+				end
 			end
-		end
 	end
 	local menu = iup.menu{
 			iup.submenu{

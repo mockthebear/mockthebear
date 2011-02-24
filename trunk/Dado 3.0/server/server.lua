@@ -9,7 +9,7 @@ require('database')
 local rooms = {}
 romid = 0
 --conf
-SITE = 'http://189.27.27.63:8090/'
+SITE = 'http://localhost:8090/'
 function protocol_parser(id,msg)
 
 end
@@ -88,6 +88,7 @@ function user_get_pack(u,i)
 		u.byte = u.byte+1
 		if u.downlaod then
 			u.don = u.don..dat
+			u.client:send('F:'..u.don:len()..'\n')
 			if u.don:len() == u.downlaod then
 				u.client:send('K\n')
 				local ida = isMaster(u.inroom,i)
@@ -113,6 +114,7 @@ function user_get_pack(u,i)
 							u.client:send((b and 1 or 0)..'\n')
 							con:close()
 							env:close()
+
 							sendMessageToAll('Y',u.inroom)
 						else
 							if u.inroom and newa then
@@ -135,8 +137,7 @@ function user_get_pack(u,i)
 			else
 				u.client:send('O\n')
 			end
-		end
-		if u.byte == 1 then
+		elseif u.byte == 1 then
 			if dat:match('!@(.+)') then
 				local nam = dat:match('!@(.+)')
 				if not getByName(nam:lower()) then
@@ -207,18 +208,20 @@ function user_get_pack(u,i)
 				u.client:send((isMaster(u.inroom,i) and 1 or 0)..'\n')
 			elseif dat:match('dd(%d+)|(.+)') and u.inroom ~= 0 then
 				local s,j = dat:match('dd(%d+)|(.+)')
-				if tonumber(s) > 1024*10 then
+				if tonumber(s) > 1024*100 then
 					u.client:send('0Max size\n')
 				elseif j == '' then
 					u.client:send('0?????????????????\n')
 				elseif not checkTheName(j) then
 					u.client:send('0Invalid name\n')
 				else
+					--zomg
 					if isMaster(u.inroom,i) then
 						u.client:send('1\n')
 						if isMaster(u.inroom,i) then
 							u.downlaod = tonumber(s)
 							u.save = j
+							u.executar = j
 						end
 					else
 						u.client:send('0You are not the master\n')
@@ -242,8 +245,11 @@ function user_get_pack(u,i)
 						rm.online[rm.n] = i
 						rm.master[rm.n] = (mpass == cont.pass_leader and i or nil)
 					end
+					if mpass ~= 'a' and mpass ~= cont.pass_leader then
+						u.client:send('wZomg!\n')
+					end
 					u.inroom = code
-					sendMessageToAll('+[Server] '..u.nam..' has joined.',code)
+					sendMessageToAll('+[Server] '..(mpass == cont.pass_leader and '[M]' or '')..u.nam..' has joined.',code)
 					sendOnlineList(code)
 				else
 					u.client:send('Unknow code or wrong password.\n')
