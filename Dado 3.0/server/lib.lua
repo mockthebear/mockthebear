@@ -1,183 +1,109 @@
-#include <GL/gl.h>
-#include <SDL/SDL.h>
 
-#include <iostream>
-#include <stdlib.h>
-#include <vector>
+function byte(int, bytes)
+	ret = {}
+	while bytes > 0 do
+		table.insert(ret, 1, string.char(int-bit.lshift(bit.rshift(int, 8), 8)))
+		int = bit.rshift(int, 8)
+		bytes = bytes - 1
+	end
+	return str_mix(unpack(ret))
+end
 
-#include "object.h"
 
-void create_window(int width, int height, int bpp, bool fullscreen);
-void draw_table(int x, int y, int id);
-void process_events();
+function int(...)
+	params, ret = {...}, 0
+	for i = 0, #params-1 do
+		ret = ret + bit.lshift(params[#params-i], 8*i)
+	end
+	return ret
+end
+function str_mix(...)
+	local s = ""
+	local rg = {...}
+	for i,b in pairs(rg) do
+		s = s..b
+	end
+	return s
+end
+function string:getBytes(s,n)
+	local t = {}
+	s = s or 1
+	self = self:sub(s,-1)
+	print(self)
+	for i=1,n do
+		t[i] = self:sub(i,i):byte()
+	end
+	return t
+end
+function createF(t)
+	local lua = 'iup.hbox{'
+	local result = {}
+	local n = 0
+	for i,b in (''..t..''):gmatch("(%[f=\".-\"%].+%[/f%])") do
+		t = t:gsub("(%[f=\".-\"%].-%[/f%])", function(s)
+		local f,tt = s:match('%[f=\"(.-)\"%](.-)%[/f%]')
+		n = n+1 result[n] = 'iup.label{FONT = "'..f..'",title=[['..tt..']]},'
+		return '€€'..n..'€€' end)
+	end
+	for i,b in (''..t..''):gmatch("(%[c=\"%d+ %d+ %d+\" f=\".-\"%].-%[/c%])") do
+		t = t:gsub("(%[c=\"%d+ %d+ %d+\" f=\".-\"%].-%[/c%])", function(s)
+		local r,g,b,f,tt = s:match("%[c=\"(%d+) (%d+) (%d+)\" f=\"(.-)\"%](.+)%[/c%]")
+		n = n+1 result[n] = 'iup.label{FONT = "'..f..'",FGCOLOR=\''..r..' '..g..' '..b..'\',title=[['..tt..']]},'
+		return '€€'..n..'€€' end)
+	end
+	for i,b,f in pairs(string.explode(t,'€€')) do
+		if tonumber(b) then
+			lua = lua..result[tonumber(b)]
+		else
+			lua = lua..'iup.label{title=[['..b..']]},\n'
+		end
+		--print(i,b)
+	end
+	local f = assert(loadstring('return '..lua..'}'))
+	return f()
+end
+function string.explode(self, sep)--By socket  (só usei pq tava pequena)
+    local result = {}
+    self:gsub("[^".. sep .."]+", function(s) table.insert(result, s) end)
+    return result
+end
 
-SDL_Surface* screen;
-std::vector<Object*> objects;
-
-int ampl = 2;
-
-float color[][3] = {
-	{0.0f, 1.0f, 0.0f},
-	{1.0f, 0.0f, 0.0f},
-	{0.7f, 0.7f, 0.7f},
-	{1.0f, 1.0f, 0.0f},
-	{0.0f, 0.0f, 1.0f},
-	{0.5f, 0.5f, 0.5f},
-	{0.6f, 0.6f, 1.0f},
-	{0.0f, 0.0f, 0.3f},
-	{0.0f, 0.0f, 0.2f},
-};
-
-int letras[][10][10] = {
-	{
-		{0,0,0,0,5,5,0,0,0,0},
-		{0,0,0,0,5,5,0,0,0,0},
-		{0,0,0,0,7,7,0,0,0,0},
-		{0,0,0,0,0,0,0,0,0,0},
-		{0,0,0,6,6,6,6,0,0,0},
-		{0,0,0,6,6,6,6,0,0,0},
-		{0,0,0,6,6,6,6,0,0,0},
-		{0,0,3,3,3,3,3,3,0,0},
-		{0,3,3,3,3,3,3,3,3,0},
-		{3,3,3,3,3,3,3,3,3,3},
-	},
-	{
-		{0,0,0,0,2,2,0,0,0,0},
-		{0,0,0,0,2,2,0,0,0,0},
-		{0,0,0,0,1,1,0,0,0,0},
-		{0,0,0,0,1,1,0,0,0,0},
-		{0,0,1,1,1,1,1,1,0,0},
-		{0,0,1,1,1,1,1,1,0,0},
-		{0,1,1,1,1,1,1,1,1,0},
-		{3,3,3,3,1,1,3,3,3,3},
-		{3,2,2,3,0,0,3,2,2,3},
-		{3,4,4,3,0,0,3,4,4,3},
-	},
-	{
-		{0,0,0,0,0,0,0,0,0,0},
-		{0,0,0,0,0,0,0,0,0,0},
-		{0,0,0,0,0,0,0,0,0,0},
-		{0,0,0,0,5,5,0,0,0,0},
-		{0,0,0,0,5,5,0,0,0,0},
-		{0,0,0,0,7,7,0,0,0,0},
-		{0,0,0,0,7,7,0,0,0,0},
-		{0,0,0,0,8,8,0,0,0,0},
-		{0,0,0,0,7,7,0,0,0,0},
-		{0,0,0,0,9,9,0,0,0,0},
-	},
-};
-
-int main(int argc,char* argv[])
-{
-	create_window(300, 300, 8, false);
-	while (true) {
-		process_events();
-	}
-	return 0;
-}
-
-void create_window(int width, int height, int bpp, bool fullscreen)
-{
-	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-		std::cout << "SDL could not be initialized!" << std::endl;
-		exit(0);
-	}
-
-	int flags = SDL_SWSURFACE | SDL_OPENGL;
-	if (fullscreen) {
-		flags = flags | SDL_FULLSCREEN;
-	}
-
-	screen = SDL_SetVideoMode(width, height, bpp, flags);
-	if (screen == NULL) {
-		std::cout << "SDL screen could not be created!" << std::endl;
-		exit(0);
-	}
-
-	glViewport(0, 0, width, height);
-	glClearColor(0, 0, 0, 0);
-	glMatrixMode(GL_PROJECTION);
-	//glutKeyboardFunc(keyboard);
-
-	glLoadIdentity();
-	glOrtho(0, width, height, 0, -1, 1);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	objects.push_back(new Object(0, 300, 2));
-
-	atexit(SDL_Quit);
-}
-
-void draw_table(int xa,int ya, int id)
-{
-	//object->set_x(object->get_x()-1);
-	//object->set_y(object->get_y()-1);
-	glBegin(GL_POINTS);
-	glColor4f(0.0f, 1.0f, 0.0f, 0.5f);
-	for (int y=1; y<=10; y++) {
-		for (int x=1; x<=10; x++) {
-			int idq = letras[id-1][y-1][x-1];
-			if (idq != 0) {
-				glColor4f(
-					color[idq-1][0],
-					color[idq-1][1],
-					color[idq-1][2],
-					0.5f
-				);
-				for (int sx=1; sx<=ampl; sx++) {
-					for (int sy=1; sy<=ampl; sy++) {
-						glVertex2d(((x*2)+sx)+xa, ((y*2)+sy)+ya);
-					}
-				}
-			}
-		}
-	}
-	glEnd();
-}
-
-void process_events()
-{
-	SDL_Event event;
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	std::vector<Object*>::iterator iter;
-	for (iter = objects.begin(); iter != objects.end(); ++iter) {
-		Object* object = *iter;
-		int id = object->get_id();
-		int y = object->get_y();
-		int x = object->get_x();
-		bool deleted = false;
-        if (id == 3){
-            if (y <= 30){
-                delete[] &iter;
-                deleted = true;
-			}else{
-				object->set_y(object->get_y()-1);
-			}elseif (id == 4){
-                object->set_x(object->get_x()+1);
-			}
-        }
-        if (!deleted)
-        {
-          draw_table(x,y,id);
-        }
-	}
-
-	SDL_GL_SwapBuffers();
-	while (SDL_PollEvent(&event) != 0) {
-		switch (event.type) {
-		case SDL_KEYDOWN:
-			switch(event.key.keysym.sym) {
-				case SDLK_SPACE:
-					objects.push_back(new Object(100, 100, 3));
-					break;
-			};
-			break;
-		case SDL_QUIT:
-			exit(0);
-			break;
-		}
-	}
-}
-
+function loadPhoto(name,t)
+	local phto = {}
+	local ce = {'BGCOLOR'}
+	local n = 1
+	local gde
+	if not t then
+		gde= gd.createFromGif(name)
+	else
+		gde= gd.createFromPng(name)
+	end
+	for x=1,gde:sizeX()+1 do
+		for y=1,gde:sizeY()+1 do
+			if not phto[(y-1)] then phto[(y-1)] = {} end
+			if not phto[(y-1)][(x-1)] then phto[(y-1)][(x-1)] = {} end
+			local p = gde:getPixel(x-2, y-2)
+			if  (gde:red(p) == 255 and gde:blue(p) ==255 and gde:green(p) == 255) then
+				phto[(y-1)][(x-1)] = 1
+			else
+				local r, b, g = gde:red(p), gde:blue(p), gde:green(p)
+				local clr  = r..' '..b..' '..g
+				local go = true
+				for i,b in pairs(ce) do
+					if b == clr then
+						go = false
+						phto[(y-1)][(x-1)] = i
+						break
+					end
+				end
+				if go then
+					n = n+1
+					ce[n] = clr
+					phto[(y-1)][(x-1)] = n
+				end
+			end
+		end
+	end
+	cs = nil
+	return iup.image{colors = ce,hotspot = "1:1",unpack(phto)}
+end
