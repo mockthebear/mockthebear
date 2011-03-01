@@ -233,6 +233,8 @@ lineq = iup.hbox{iup.label{title="Loaded "},total,iup.label{title=" photos."}};
 curent = iup.label{title='Current file: '}
 
 dg = iup.dialog{
+	size="480x250",
+	MAXSIZE="600x410",
 	iup.hbox{
 		iup.frame{
 			size='x230',
@@ -294,7 +296,7 @@ dg = iup.dialog{
 				caenge,
 				iup.fill{},
 				createF('[c="0 0 0" f="HELVETICA_BOLD_14"]Auto Wallpaper changer[/c][c="200 200 200" f="HELVETICA_BOLD_8"]V 1.0[/c]'),
-				iup.hbox{createF('[c="0 0 0" f="HELVETICA_BOLD_8"]By[/c] [c="236 167 94" f="HELVETICA_BOLD_8"]Mock the bear[/c]'),iup.fill{},iup.label{title = "",image =loadPhoto('im1.png',1)}},
+				iup.hbox{createF('[c="0 0 0" f="HELVETICA_BOLD_8"]By[/c] [c="236 167 94" f="HELVETICA_BOLD_8"]Mock the bear[/c]'),iup.label{title = "",image =loadPhoto('im1.png',1)}},
 				createF('[c="100 100 100" f="HELVETICA_BOLD_8"]Contact:[/c] [c="0 0 255" f="HELVETICA_BOLD_8"]matheus.mtb7@gmail.com[/c]'),
 				iup.fill{},
 				iup.hbox{
