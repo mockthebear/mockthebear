@@ -1,7 +1,9 @@
 require('iuplua')
 require('ex')
+require('gd')
 math.randomseed(os.time())
 local imgs = {}
+local nams = {}
 local ind  = 0
 local mydir = os.currentdir()
 local photodir = {}
@@ -17,6 +19,7 @@ function updatedat()
 end
 function loadData()
 	imgs = {}
+	nams = {}
 	photodir = {}
 	ind = 0
 	ml.value = ''
@@ -52,6 +55,7 @@ function loadDir(dir)
 		if i.type == 'file' and (i.name:match('.+%.(...)') == 'jpg' or i.name:match('.+%.(...)') == 'bmp') then
 			ind = ind+1
 		    imgs[ind] = dir..'\\'..tostring(i.name)
+			nams[ind] =  tostring(i.name)
 		end
 	end
 end
@@ -70,6 +74,82 @@ function check_to_change(f)
 	end
 end
 
+---Functions
+function loadPhoto(name,t)
+	local phto = {}
+	local ce = {}
+	local n = 1
+	local gde
+	if not t then
+		gde= gd.createFromGif(name)
+	else
+		gde= gd.createFromPng(name)
+	end
+	assert(gde)
+	for x=1,gde:sizeX()+1 do
+		for y=1,gde:sizeY()+1 do
+			if not phto[(y-1)] then phto[(y-1)] = {} end
+			if not phto[(y-1)][(x-1)] then phto[(y-1)][(x-1)] = {} end
+			local p = gde:getPixel(x-2, y-2)
+			if  (gde:red(p) == 255 and gde:blue(p) ==255 and gde:green(p) == 255) then
+				phto[(y-1)][(x-1)] = 1
+			else
+				local r, b, g = gde:red(p), gde:blue(p), gde:green(p)
+				local clr  = r..' '..b..' '..g
+				local go = true
+				for i,b in pairs(ce) do
+					if b == clr then
+						go = false
+						phto[(y-1)][(x-1)] = i
+						break
+					end
+				end
+				if go then
+					n = n+1
+					ce[n] = clr
+					phto[(y-1)][(x-1)] = n
+				end
+			end
+		end
+	end
+	cs = nil
+	ce[1] = 'BGCOLOR'
+	print(tostring(ce[1]),phto[1][1])
+	return iup.image{colors = ce,unpack(phto)}
+end
+function string.explode(self, sep)--By socket  (só usei pq tava pequena)
+    local result = {}
+    self:gsub("[^".. sep .."]+", function(s) table.insert(result, s) end)
+    return result
+end
+
+function createF(t)
+	local lua = 'iup.hbox{'
+	local result = {}
+	local n = 0
+	for i,b in (''..t..''):gmatch("(%[f=\".-\"%].+%[/f%])") do
+		t = t:gsub("(%[f=\".-\"%].-%[/f%])", function(s)
+		local f,tt = s:match('%[f=\"(.-)\"%](.-)%[/f%]')
+		n = n+1 result[n] = 'iup.label{FONT = "'..f..'",title=[['..tt..']]},'
+		return '€€'..n..'€€' end)
+	end
+	for i,b in (''..t..''):gmatch("(%[c=\"%d+ %d+ %d+\" f=\".-\"%].-%[/c%])") do
+		t = t:gsub("(%[c=\"%d+ %d+ %d+\" f=\".-\"%].-%[/c%])", function(s)
+		local r,g,b,f,tt = s:match("%[c=\"(%d+) (%d+) (%d+)\" f=\"(.-)\"%](.+)%[/c%]")
+		n = n+1 result[n] = 'iup.label{FONT = "'..f..'",FGCOLOR=\''..r..' '..g..' '..b..'\',title=[['..tt..']]},'
+		return '€€'..n..'€€' end)
+	end
+	for i,b,f in pairs(string.explode(t,'€€')) do
+		if tonumber(b) then
+			lua = lua..result[tonumber(b)]
+		else
+			lua = lua..'iup.label{title=[['..b..']]},\n'
+		end
+		--print(i,b)
+	end
+	local f = assert(loadstring('return '..lua..'}'))
+	return f()
+end
 
 local icon = iup.image{
 {24,24,9,9,9,9,9,9,9,9,9,9,26,25,25,25,},
@@ -123,7 +203,7 @@ colors = {
 }
 ---Start
 
-ml = iup.multiline{value='',size='300x200',active='NO'}
+ml = iup.multiline{value='',size='250x150',active='NO'}
 total = iup.label{title=0}
 caenge = iup.label{title='Changing wall paper in 0 seconds.'}
 local item_start,item_stop
@@ -150,11 +230,12 @@ b_stop = iup.button{title='Stop',size='100x15',ACTIVE=STARTED==1 and 'YES' or 'N
 	item_stop = 'NO'
 end}
 lineq = iup.hbox{iup.label{title="Loaded "},total,iup.label{title=" photos."}};
-
+curent = iup.label{title='Current file: '}
 
 dg = iup.dialog{
 	iup.hbox{
 		iup.frame{
+			size='x230',
 			title="Main",
 			iup.vbox{
 				iup.label{title="Working directories"},
@@ -195,12 +276,13 @@ dg = iup.dialog{
 						dat_c = dat_c:gsub('<(%d+)>','<'..int..'>')
 						updatedat()
 					end
-				end},iup.button{title='Remove dir',size='100x15'}},
+				end}},
 				lineq,
 			}
 		},
 		iup.frame{
 			title="Control",
+			size='210x230',
 			iup.vbox{
 				iup.hbox{iup.button{title='HIDE',size='200x15',action=function()
 					dg.hidetaskbar = 'yes'
@@ -210,6 +292,15 @@ dg = iup.dialog{
 					b_start,b_stop
 				},
 				caenge,
+				iup.fill{},
+				createF('[c="0 0 0" f="HELVETICA_BOLD_14"]Auto Wallpaper changer[/c][c="200 200 200" f="HELVETICA_BOLD_8"]V 1.0[/c]'),
+				iup.hbox{createF('[c="0 0 0" f="HELVETICA_BOLD_8"]By[/c] [c="236 167 94" f="HELVETICA_BOLD_8"]Mock the bear[/c]'),iup.fill{},iup.label{title = "",image =loadPhoto('im1.png',1)}},
+				createF('[c="100 100 100" f="HELVETICA_BOLD_8"]Contact:[/c] [c="0 0 255" f="HELVETICA_BOLD_8"]matheus.mtb7@gmail.com[/c]'),
+				iup.fill{},
+				iup.hbox{
+					curent,
+				},
+
 			},
 		}
 	},
@@ -275,8 +366,11 @@ function timer1:action_cb()
 		end
 		if start <= os.time() then
 			start = os.time()+DELAY
-			local r,f = check_to_change(imgs[math.random(1,ind)])
+			local selected = math.random(1,ind)
+			local r,f = check_to_change(imgs[selected])
 			if r then
+				curent.title= 'Current file: '..nams[selected]
+				iup.Refresh(curent)
 				setWallPaper(f)
 			end
 		end
@@ -284,6 +378,8 @@ function timer1:action_cb()
 		if caenge.title ~= 'Changing wall paper in - seconds.' then
 			caenge.title = 'Changing wall paper in - seconds.'
 			iup.Refresh(caenge)
+			curent.title= 'Current file: '
+			iup.Refresh(curent)
 		end
 	end
 	return iup.DEFAULT
