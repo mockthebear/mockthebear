@@ -245,7 +245,7 @@ dg = iup.dialog{
 				iup.hbox{iup.button{title='Add dir',size='100x15',action=function()
 					local filedlg = iup.filedlg{DIALOGTYPE='DIR'}
 					filedlg:popup (iup.ANYWHERE, iup.ANYWHERE)
-					if filedlg.status ~= -1 then
+					if filedlg.status ~= -1 and filedlg.VALUE then
 						dat_c = dat_c:sub(1,2)..'#'..filedlg.VALUE..'~'..dat_c:sub(3,dat_c:len())
 						updatedat()
 						iup.Message('Sucess','The dir has been added.')
@@ -259,22 +259,24 @@ dg = iup.dialog{
 						end
 						L = L..b2..'|'
 					end
-					local ret,dir = iup.GetParam("Select a dir to remove", param_action,"List: %l"..L.."\n",1)
-					if ret ~= 0 then
-						dir = dir+1
-						if photodir[dir] then
-							dat_c = dat_c:gsub('#'..photodir[dir]..'~','')
-							updatedat()
-							iup.Message('Sucess','The dir has been deleted.')
-						else
-							iup.Message('OPS','Fail! :(')
+					if L ~= '|' then
+						local ret,dir = iup.GetParam("Select a dir to remove", param_action,"List: %l"..L.."\n",1)
+						if ret ~= 0 then
+							dir = dir+1
+							if photodir[dir] then
+								dat_c = dat_c:gsub('#'..photodir[dir]..'~','')
+								updatedat()
+								iup.Message('Sucess','The dir has been deleted.')
+							else
+								iup.Message('OPS','Fail! :(')
+							end
 						end
 					end
 				end}
 				},
 				iup.hbox{iup.button{title='Change delay',size='100x15',action=function()
 					local ret,int = iup.GetParam("Enter a new delay", param_action,"Delay (in seconds): %i\n",DELAY)
-					if ret ~= 0 then
+					if ret ~= 0 and int then
 						dat_c = dat_c:gsub('<(%d+)>','<'..int..'>')
 						updatedat()
 					end
