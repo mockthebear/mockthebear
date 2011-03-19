@@ -1,2 +1,0 @@
-; dlltool --base-file C:\DOCUME~1\ADMINI~1\CONFIG~1\Temp/cca03324.base --output-exp bits.exp --dllname bits.dll --output-def libbits.def --no-export-all-symbols --add-stdcall-alias --exclude-symbol=DllMainCRTStartup@12 --def C:\DOCUME~1\ADMINI~1\CONFIG~1\Temp/cca03324.def --output-lib libbits.a
-EXPORTS
