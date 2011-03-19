@@ -9,7 +9,7 @@ require('database')
 local rooms = {}
 romid = 0
 --conf
-SITE = 'http://localhost:8090/'
+SITE = 'http://186.213.216.144:8090/'
 function protocol_parser(id,msg)
 
 end
@@ -142,8 +142,8 @@ function user_get_pack(u,i)
 				local nam = dat:match('!@(.+)')
 				if not getByName(nam:lower()) then
 					if checkTheName(nam) then
-						u.client:send('!!'..byte(2, 3)..'€'..SITE..'\n')
-						u.client:send('%'..#rooms..'\n')
+						u.client:send('!!'..byte(3, 3)..'€'..SITE..'\n')
+						u.client:send('%2\n')
 						local ss = ''
 						for i,b in pairs(online)  do
 							if b.nam ~= '' and b.inroom == 0 then
