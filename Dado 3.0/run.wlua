@@ -1,6 +1,7 @@
 if showWindow then
 	showWindow()
 end
+
 --Requires
 local req_ = {'imlua','socket','iuplua','iupluacontrols','socket.http','gd','cdlua','iupluacd','bit','lib','iupluaole','luacom','cdluaim'}
 for _,a in pairs(req_) do
@@ -48,7 +49,7 @@ function callConect(skipa)
 			PORT = 0
 			NAM = ''
 			local ff = getFileCon()
-			local ret, serv,port,name = iup.GetParam("Title",nil,"Server: %s\nPort: %i\nNick: %s\n",'localhost',7175,ff:match('(.+)'))
+			local ret, serv,port,name = iup.GetParam("Title",nil,"Server: %s\nPort: %i\nNick: %s\n",'69.162.100.200',7175,ff:match('(.+)'))
 			if ret == 0 or not serv then os.exit() end
 			if name ~= ff:match('(.+)') and name ~= '' then
 				ff = ff:gsub(ff:match('(.+)'),name,1)
@@ -126,7 +127,7 @@ function getFirstByte()
 		connect = false
 		return false
 	end
-	if dat:match('w(.+)') then
+	if dat:match('w(.+)') and dat then
 		iup.Message('Warning!',dat:match('w(.+)'):gsub('#','\n'))
 		connect:close()
 		connect = false
@@ -199,7 +200,16 @@ local function callNew()
 						connect:settimeout(0.01)
 						if a == '1' then
 							local emile = iup.multiline{value=tabs[idare].vaca,size='300x200'}
+							local labl = iup.label{title='Size: '..emile.value:len()..'/2000',FGCOLOR='0 0 0'};
 							local dia
+							emile.action=function()
+								labl.title = 'Size: '..emile.value:len()..'/2000'
+								if emile.value:len() >= 2000 then
+									FGCOLOR='255 0 0'
+								else
+									FGCOLOR='0 0 0'
+								end
+							end
 							local tet = iup.text{value=m,size='100x'}
 							dia = iup.dialog{
 							title='Editing '..m,
@@ -209,6 +219,10 @@ local function callNew()
 										emile,
 										iup.button{title='Save',action=function()
 											local f = emile.value
+											if f:len() >= 2000 then
+												iup.Message('Error','Maxium size is 2000. You are using '..f:len()..'.')
+												return
+											end
 											if f:len() == 0 then
 												connect:send('CLEAR'..tabs[idare].vaco..'\n')
 											else
@@ -219,30 +233,32 @@ local function callNew()
 											connect:settimeout(0.01)
 											if c == '1' then
 												local gag,dga = createADownload()
-
-												local now_size = 0
-												while true do
-													connect:send(f:sub(now_size,-1))
-													connect:settimeout(10)
-													local a,er = connect:receive()
-													if a == 'K' then
-														local c = connect:receive()
-														print('UU',c)
-														connect:settimeout(0.01)
-														break
-													elseif a and a:match('F:(%d+)') then
-														now_size = tonumber(a:match('F:(%d+)'))
-														gag.value = (now_size/f:len())
+												if gag then
+													local now_size = 0
+													while true do
+														connect:send(f:sub(now_size,-1))
+														connect:settimeout(10)
+														local a,er = connect:receive()
+														if a == 'K' then
+															local c = connect:receive()
+															print('UU',c)
+															connect:settimeout(0.01)
+															break
+														elseif a and a:match('F:(%d+)') then
+															now_size = tonumber(a:match('F:(%d+)'))
+															gag.value = (now_size/f:len())
+														end
 													end
+													dga:destroy()
 												end
-												dga:destroy()
 												connect:settimeout(0.01)
 												tabs[idare].vaca = dat
 											else
 												iup.Message('Error',c:sub(2,c:len()))
 											end
 											dia:destroy()
-										end}
+										end},
+										labl,
 									}
 								}
 							}
@@ -421,6 +437,7 @@ local function callNew()
 		local dat,err = connect:receive()
 		if err == 'closed' then  timer1.run = "NO" returned=1 connect = nil dialog:destroy() end
 		if dat then
+			print(9,os.clock(),dat)
 			if dat:sub(1,1) == '¨' then
 				dat = dat:sub(2,-1)
 				for i=1,ne do
@@ -440,25 +457,29 @@ local function callNew()
 			elseif dat:match('%#@(.-)*(.+)') then --Update name
 			elseif dat:match('Y') then
 				updateTabs()
-			elseif dat:match('S') then
-				s = socket.http.request(site.."index.php","code="..G_CODE.."&pass="..G_PASS.."&select=1")
-				URRRL.title = 'URL: -'
-				if s:sub(1,1) == '§' then
-					local page = s:sub(2,-1)
-					local ba = iup.Alarm("Alert", "This room want open the page:\n"..page.."\ndo you want proceed?" ,"Yes" ,"No")
-					if ba == 1 then
-						control.com:Navigate(page)
-						dialog[1][1][1].title = 'URL: '..page
-						iup.Refresh(dialog)
+			elseif dat == 'S' then
+				print(7,os.clock())
+				--if not WAITE then
+					WAITE = nil
+					s = socket.http.request(site.."index.php","code="..G_CODE.."&pass="..G_PASS.."&select=1")
+					URRRL.title = 'URL: -'
+					if s:sub(1,1) == '§' then
+						local page = s:sub(2,-1)
+						local ba = iup.Alarm("Alert", "This room want open the page:\n"..page.."\ndo you want proceed?" ,"Yes" ,"No")
+						if ba == 1 then
+							control.com:Navigate(page)
+							dialog[1][1][1].title = 'URL: '..page
+							iup.Refresh(dialog)
+						else
+							timer1.run = "NO"
+							dialog:destroy()
+							returned = 2
+							return
+						end
 					else
-						timer1.run = "NO"
-						dialog:destroy()
-						returned = 2
-						return
+						control.com:Navigate(site.."index.php?code="..G_CODE.."&pass="..G_PASS.."&select=1&t="..os.time())
 					end
-				else
-					control.com:Navigate(site.."index.php?code="..G_CODE.."&pass="..G_PASS.."&select=1&t="..os.time())
-				end
+				--end
 			end
 		end
 	end
@@ -642,9 +663,7 @@ local function callNew()
 
 					iup.frame{
 						title='Players info',
-						iup.vbox{tabs,iup.button{title='add',action=function()
-						tabs[3] = createTab("aaxx")
-						iup.Refresh(tabs) end},},
+						iup.vbox{tabs},
 
 						},
 				},
@@ -682,7 +701,7 @@ local function callNew()
 			end
 		end
 	end
-	gauge.value = 0.70
+	gauge.value = 0.95
 	timer1.run = "YES"
 	dialog[1][1][1].title = 'URL: '
 	if s:sub(1,1) == '§' then
@@ -698,7 +717,7 @@ local function callNew()
 			return 2
 		end
 	else
-		local f = s
+		--[[local f = s
 		local sa = 500
 			for i=0,math.floor(f:len()/sa)+1 do
 				local c = f:sub((i*sa)+1,(i+1)*sa)
@@ -714,9 +733,14 @@ local function callNew()
 						end
 					end
 				end
-			end
-		dialog[1][1][1].title = 'URL: -'
+			end]]
 		iup.Refresh(dialog)
+		WAITE = true
+		print(1,os.clock())
+		control.com:Navigate(site.."index.php?code="..G_CODE.."&pass="..G_PASS.."&daj=1")
+		print(2,os.clock())
+		dialog[1][1][1].title = 'URL: -'
+
 
 	end
 	gauge.value = 1
