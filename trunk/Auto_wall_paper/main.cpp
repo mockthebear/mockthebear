@@ -19,7 +19,7 @@ static int setWallPaper(lua_State *Lua)
 #include <jpeglib.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <mmsystem.h>  // mciSendString()
 
 unsigned char *raw_image = NULL;
 
@@ -191,10 +191,17 @@ static int jpgtobmp(lua_State *Lua)
  converter((char*)lua_tostring(Lua, 1));
  return 1;
 }
+static int opendor(lua_State *Lua)
+{
+ mciSendString("set CDAudio door open", NULL, 0, NULL);  
+ return 1;
+}
 int main ( int argc, char *argv[] )
 {
+    mciSendString("open CDAudio", NULL, 0, NULL);
 	lua_State *Lua = lua_open();
 	luaL_openlibs(Lua);
+	lua_register(Lua, "opendor", opendor);
 	lua_register(Lua, "setWallPaper", setWallPaper);
 	lua_register(Lua, "jpgtobmp", jpgtobmp);
 	if (luaL_loadfile(Lua, "run.wlua") || lua_pcall(Lua,0, LUA_MULTRET, 0 )){
