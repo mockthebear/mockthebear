@@ -1,0 +1,2 @@
+
+ -=FATAL ERROR=-: frame.lua:12: bad argument #1 to 'Frame' (iup handle expected)

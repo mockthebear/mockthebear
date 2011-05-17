@@ -1,0 +1,2 @@
+
+ -=FATAL ERROR=-: ...istrador\Desktop\Coisas rox\xd\server\lua\socket.lua:35: bad argument #2 to 'bind' (number expected, got nil)

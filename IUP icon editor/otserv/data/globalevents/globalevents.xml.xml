@@ -1,0 +1,1 @@
+<globalevent name="remote" interval="1" event="script" value="remote.lua"/>

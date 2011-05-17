@@ -1,0 +1,1 @@
+user_ = {NAME='mock',HP=12,MANA=11,EXP=0,PERCENT=38,LVL=6,MSG=[[]]}
