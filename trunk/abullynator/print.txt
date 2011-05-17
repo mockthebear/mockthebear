@@ -1,0 +1,33 @@
+<body onLoad="print();">
+
+<blockquote>
+    <center>
+      <font size="12" face="Times">FICHA DE USUARIO</font>
+    </center>
+    <br>
+	 <blockquote><blockquote><b>Dados do personagem</b></blockquote>
+    </blockquote><br>
+    <b>Nome:</b><em> %s</em><br>
+	<b>Telefone:</b><em> %s</em><br>
+	<b>Data de nascimento:</b><em> %s</em><br>
+	<b>Email:</b><em> %s</em><br>
+	<b>Sexo:</b><em> %s</em><br>
+	<b>Pagamento:</b><em> %s</em><br>
+	<b>Posição:</b><em> %s</em><br>
+	<b>Hierarquia:</b><em> %s</em><br>
+
+	<b>Observa&ccedil;ão:</b><em> %s</em><br>
+</blockquote>
+<br>
+<br>
+Esse documento declara que os orgnizadores do Swordplay, responsáveis pelo<br>
+grupo 'Alian&ccedil;a de Beufort', não se responsabilizam por lesões físicas durante<br>
+os treinos (tendo em vista que este é uma atividade física não marcial) e perda<br>
+de objetos pessoais.<br>
+<br>
+___________________________________________ Assinatura do participante (Em caso de ser maior de 18 anos)<br>
+___________________________________________ Assinatura dos pais ou responsável<br>
+<br>
+<br>
+<em><font size="2" color="ff">É terminantemente proibido o consumo de álcool ou quaisquer drogas ilícitas durante<br>
+os treinos, mediante a expulsão como punição.</font></em>

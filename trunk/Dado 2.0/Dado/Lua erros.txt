@@ -1,0 +1,12 @@
+
+ -=FATAL ERROR=-: attempt to call a string value
+ -=FATAL ERROR=-: attempt to call a string value
+ -=FATAL ERROR=-: run.lua:299: attempt to index global 'skin' (a nil value)
+ -=FATAL ERROR=-: attempt to call a string value
+ -=FATAL ERROR=-: attempt to call a string value
+ -=FATAL ERROR=-: skins.lua:10: kd?
+ -=FATAL ERROR=-: skins.lua:18: 0 233 216
+ -=FATAL ERROR=-: skins.lua:18: 0 233 216
+ -=FATAL ERROR=-: run.lua:24: attempt to call global 'IupUser' (a nil value)
+ -=FATAL ERROR=-: run.lua:24: attempt to call field 'user' (a nil value)
+ -=FATAL ERROR=-: run.lua:24: attempt to call field 'User' (a nil value)
