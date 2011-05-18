@@ -1,0 +1,25 @@
+post(v)
+If you use method POST you can use this function like &_POST['name']
+in php, on this case: post('name'), it return the value or nil.
+---------------
+get(n)
+Like &_GET['a'] in php. You can use like post.
+get('a')
+---------------
+set_cookie(name,value,time)
+Here you can set cookies
+---------------
+cookie(name)
+You take cookie value
+---------------
+echo(v)
+You print a value in page
+
+
+--------
+post(v)
+get(n)
+set_cookie(name,value,time)
+cookie(name)
+echo(v)
+--------
