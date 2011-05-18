@@ -1,245 +1,265 @@
+#include <GL/gl.h>
 #include <GL/glut.h>
-#include <math.h>
-#include <time.h>
+#include <SDL/SDL.h>
+
 #include <iostream>
+#include <stdlib.h>
+#include <vector>
 
-void onDisplay();
-void onKeyDown(unsigned char key, int x, int y);
-void onKeyUp(unsigned char key, int x, int y);
-void onUpdate(int value);
+#include "object.h"
 
-struct Paddle
-{
-	int x;
-	int y;
-	int width;
-	int height;
+void create_window(int width, int height, int bpp, bool fullscreen);
+void draw_table(int x, int y, int id);
+void process_events();
+
+SDL_Surface* screen;
+std::vector<Object*> objects;
+bool eml = false;
+bool emr = false;
+
+int ampl = 2;
+
+float color[][3] = {
+	{0.0f, 1.0f, 0.0f}, // green
+	{1.0f, 0.0f, 0.0f}, //red
+	{0.7f, 0.7f, 0.7f},
+	{1.0f, 1.0f, 0.0f}, // amarelo
+	{0.0f, 0.0f, 1.0f}, // blue
+	{0.5f, 0.5f, 0.5f},
+	{0.6f, 0.6f, 1.0f},
+	{0.0f, 0.0f, 0.3f},
+	{0.0f, 0.0f, 0.2f},
+	{1.0f, 0.6f, 0.0f}, // laranja
+
 };
 
-struct Ball
-{
-	int x;
-	int y;
-	int width;
-	int height;
-	int vel_x;
-	int vel_y;
+int letras[][10][10] = {
+	{
+		{0,0,0,0,5,5,0,0,0,0},
+		{0,0,0,0,5,5,0,0,0,0},
+		{0,0,0,0,7,7,0,0,0,0},
+		{0,0,0,0,0,0,0,0,0,0},
+		{0,0,0,6,6,6,6,0,0,0},
+		{0,0,0,6,6,6,6,0,0,0},
+		{0,0,0,6,6,6,6,0,0,0},
+		{0,0,3,3,3,3,3,3,0,0},
+		{0,3,3,3,3,3,3,3,3,0},
+		{3,3,3,3,3,3,3,3,3,3},
+	},
+	{
+		{0,0,0,0,2,2,0,0,0,0},
+		{0,0,0,0,2,2,0,0,0,0},
+		{0,0,0,0,1,1,0,0,0,0},
+		{0,0,0,0,1,1,0,0,0,0},
+		{0,0,1,1,1,1,1,1,0,0},
+		{0,0,1,1,1,1,1,1,0,0},
+		{0,1,1,1,1,1,1,1,1,0},
+		{3,3,3,3,1,1,3,3,3,3},
+		{3,2,2,3,0,0,3,2,2,3},
+		{3,4,4,3,0,0,3,4,4,3},
+	},
+	{
+		{0,0,0,0,0,0,0,0,0,0},
+		{0,0,0,0,0,0,0,0,0,0},
+		{0,0,0,0,0,0,0,0,0,0},
+		{0,0,0,0,5,5,0,0,0,0},
+		{0,0,0,0,5,5,0,0,0,0},
+		{0,0,0,0,7,7,0,0,0,0},
+		{0,0,0,0,7,7,0,0,0,0},
+		{0,0,0,0,8,8,0,0,0,0},
+		{0,0,0,0,7,7,0,0,0,0},
+		{0,0,0,0,9,9,0,0,0,0},
+	},
+	{
+		{0,0,0,0,0,0,0,0,0,0},
+		{0,0,0,0,0,0,0,0,0,0},
+		{0,0,4,0,0,0,0,4,0,0},
+		{0,0,0,10,0,0,10,0,0,0},
+		{0,0,0,0,2,2,0,0,0,0},
+		{0,0,0,0,2,2,0,0,0,0},
+		{0,0,0,10,0,0,10,0,0,0},
+		{0,0,4,0,0,0,0,4,0,0},
+		{0,0,0,0,0,0,0,0,0,0},
+		{0,0,0,0,0,0,0,0,0,0},
+	},
 };
-
-struct Paddle bat1;
-struct Paddle bat2;
-struct Ball ball;
-
-int key_w = 0;
-int key_s = 0;
-int key_i = 0;
-int key_k = 0;
-int start = 1;
-int speed = 5;
-
-int p1 = 0;
-int p2 = 0;
-
-float ballspeed = 8;
-float batspeed = 5;
-
-bool is_inside(float x, float y, float dx, float dy, float dw, float dh)
+Object* objectk;
+int main(int argc,char* argv[])
 {
-	return x >= dx & x <= dx + dw & y >= dy & y <= dy + dh;
-}
-
-bool is_intersecting(float x, float y, float w, float h, float dx, float dy, float dw, float dh)
-{
-	return is_inside(x, y, dx, dy, dw, dh)
-		|| is_inside(x + w, y, dx, dy, dw, dh)
-		|| is_inside(x, y + h, dx, dy, dw, dh)
-		|| is_inside(x + w, y + h, dx, dy, dw, dh);
-}
-
-int main(int argc, char *argv[])
-{
-	glutInit(&argc, argv);
-
-	srand(time(NULL));
-
-	glutInitWindowSize(640, 480);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
-	glutCreateWindow("Pong");
-
-	glClearColor(0.0, 0.0, 0.0, 0.0);
-
-	gluOrtho2D(0, 640, 480, 0);
-
-	bat1.width = 20;
-	bat1.height = 100;
-	bat1.x = 30;
-	bat1.y = (480 - bat1.height) / 2;
-
-	bat2.width = 20;
-	bat2.height = 100;
-	bat2.x = 640 - 30 - bat2.width;
-	bat2.y = (480 - bat2.height) / 2;
-
-	ball.width = 20;
-	ball.height = 20;
-	ball.x = (640 - ball.width) / 2;
-	ball.y = (480 - ball.height) / 2;
-	ball.vel_x = 0;
-	ball.vel_y = 0;
-
-	glutDisplayFunc(onDisplay);
-	glutKeyboardFunc(onKeyDown);
-	glutKeyboardUpFunc(onKeyUp);
-	onUpdate(0);
-
-	glutMainLoop();
+	create_window(300, 300, 8, false);
+	while (true) {
+		process_events();
+	}
 	return 0;
 }
-
-void onDisplay()
+Object* getObjMain()
 {
-	glClear(GL_COLOR_BUFFER_BIT);
+    std::vector<Object*>::iterator iter;
+	for (iter = objects.begin(); iter != objects.end(); ++iter) {
+	Object* object = *iter;
+           if (object->get_name() == "main")
+              {
+               return object;
+               break;
+               }
+        }
+}
+void create_window(int width, int height, int bpp, bool fullscreen)
+{
+	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+		std::cout << "SDL could not be initialized!" << std::endl;
+		exit(0);
+	}
 
-	glBegin(GL_POLYGON);
-		glVertex2f(bat1.x,		bat1.y);
-		glVertex2f(bat1.x + bat1.width,	bat1.y);
-		glVertex2f(bat1.x + bat1.width,	bat1.y + bat1.height);
-		glVertex2f(bat1.x,		bat1.y + bat1.height);
-	glEnd();
+	int flags = SDL_SWSURFACE | SDL_OPENGL;
+	if (fullscreen) {
+		flags = flags | SDL_FULLSCREEN;
+	}
 
-	glBegin(GL_POLYGON);
-		glVertex2f(bat2.x,		bat2.y);
-		glVertex2f(bat2.x + bat2.width,	bat2.y);
-		glVertex2f(bat2.x + bat2.width,	bat2.y + bat2.height);
-		glVertex2f(bat2.x,		bat2.y + bat2.height);
-	glEnd();
+	screen = SDL_SetVideoMode(width, height, bpp, flags);
+	if (screen == NULL) {
+		std::cout << "SDL screen could not be created!" << std::endl;
+		exit(0);
+	}
 
-	glBegin(GL_POLYGON);
-		glVertex2f(ball.x,		ball.y);
-		glVertex2f(ball.x + ball.width,	ball.y);
-		glVertex2f(ball.x + ball.width,	ball.y + ball.height);
-		glVertex2f(ball.x,		ball.y + ball.height);
-	glEnd();
+	glViewport(0, 0, width, height);
+	glClearColor(0, 0, 0, 0);
+	glMatrixMode(GL_PROJECTION);
+	//glutKeyboardFunc(keyboard);
 
-	glutSwapBuffers();
+	glLoadIdentity();
+	gluOrtho2D(0.0f, width, height, 0.0f);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	objects.push_back(new Object(10, 250, 2));
+	std::vector<Object*>::iterator iter;
+	for (iter = objects.begin(); iter != objects.end(); ++iter) {
+        Object* object = *iter;
+        object->set_name("main");
+    }
+    objectk =  getObjMain();
+	atexit(SDL_Quit);
 }
 
-void onKeyDown(unsigned char key, int x, int y)
+void draw_table(int xa,int ya, int id)
 {
-	switch (key) {
-	case 'w':
-		key_w = 1;
-		break;
-	case 's':
-		key_s = 1;
-		break;
-	case 'i':
-		key_i = 1;
-		break;
-	case 'k':
-		key_k = 1;
-		break;
-	case ' ':
-		if (start == 1) {
-			start = 0;
-			ball.vel_x = 1;
-			if (rand()%2 == 0) {
-				ball.vel_x *= -1;
-			}
-			ball.vel_y = rand()%2-1;
-			if (ball.vel_y == 0) {
-				ball.vel_y = 1;
+	//object->set_x(object->get_x()-1);
+	//object->set_y(object->get_y()-1);
+	glBegin(GL_POINTS);
+	glColor4f(0.0f, 1.0f, 0.0f, 0.5f);
+	for (int y=1; y<=10; y++) {
+		for (int x=1; x<=10; x++) {
+			int idq = letras[id-1][y-1][x-1];
+			if (idq != 0) {
+				glColor4f(
+					color[idq-1][0],
+					color[idq-1][1],
+					color[idq-1][2],
+					0.5f
+				);
+				for (int sx=1; sx<=ampl; sx++) {
+					for (int sy=1; sy<=ampl; sy++) {
+						glVertex2d(((x*2)+sx)+xa, ((y*2)+sy)+ya);
+					}
+				}
 			}
 		}
-		break;
 	}
+	glEnd();
 }
 
-void onKeyUp(unsigned char key, int x, int y)
+int ax,ay,aid;
+bool add;
+void process_events()
 {
-	switch (key) {
-	case 'w':
-		key_w = 0;
-		break;
-	case 's':
-		key_s = 0;
-		break;
-	case 'i':
-		key_i = 0;
-		break;
-	case 'k':
-		key_k = 0;
-		break;	
+	SDL_Event event;
+	glClear(GL_COLOR_BUFFER_BIT);
+	glDisable(GL_TEXTURE_2D);
+	std::vector<Object*>::iterator iter;
+	for (iter = objects.begin(); iter != objects.end(); ++iter) {
+		Object* object = *iter;
+		int id = object->get_id();
+		int y = object->get_y();
+		int x = object->get_x();
+		bool deleted = false;
+        if (id == 3){
+            if (y <= 10){
+                ax = x;
+                ay = y;
+                aid = 4;
+                add = true;
+                delete[] &iter;
+                deleted = true;
+                //break;
+			}else{
+				object->set_y(object->get_y()-3);
+			}
+
+       }
+       if (id == 4){
+            int cyc = object->get_cycle();
+            if (cyc > 1)
+            {
+               object->set_cycle(cyc-1);
+            }else{
+                delete[] &iter;
+                deleted = true;
+            }
+       }
+    glBegin(GL_POINTS);
+	glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
+	glVertex2d(100, 100);
+    glEnd();
+        if (!deleted)
+        {
+          draw_table(x,y,id);
+        }
+	}
+	if (add){	objects.push_back(new Object(ax, ay, aid));}
+	if (eml)
+	{
+       Object* object = getObjMain();
+	   object->set_x(object->get_x()-2);
+	   if (object->get_x() <= -5*ampl){object->set_x(300-(5*ampl));}
+    }else if(emr){
+       Object* object = getObjMain();
+	   object->set_x(object->get_x()+2);
+	   if (object->get_x() >= 300-(5*ampl)){object->set_x(-5*ampl);}
+    }
+	glEnable(GL_TEXTURE_2D);
+	SDL_GL_SwapBuffers();
+	while (SDL_PollEvent(&event) != 0) {
+		switch (event.type) {
+			case SDL_KEYUP:
+            	switch(event.key.keysym.sym) {
+				case SDLK_LEFT:
+					eml = false;
+					break;
+				case SDLK_RIGHT:
+					emr = false;
+					break;
+
+			}
+		 	break;
+            case SDL_KEYDOWN:
+				switch(event.key.keysym.sym) {
+					case SDLK_SPACE:
+
+						objects.push_back(new Object(objectk->get_x(), objectk->get_y()-(10*ampl), 3));
+                        break;
+					case SDLK_LEFT:
+                        eml = true;
+                        break;
+					case SDLK_RIGHT:
+                        emr = true;
+                        break;
+			  };
+              break;
+			case SDL_QUIT:
+				exit(0);
+				break;
+		}
 	}
 }
 
-void onUpdate(int value)
-{
-	if (key_w == 1) {
-		bat1.y -= (float)(1 * batspeed);
-	}
-	if (key_s == 1) {
-		bat1.y += (float)(1 * batspeed);
-	}
-	if (key_i == 1) {
-		bat2.y -= (float)(1 * batspeed);
-	}
-	if (key_k == 1) {
-		bat2.y += (float)(1 * batspeed);
-	}
-
-	if (bat1.y < 0) {
-		bat1.y = 0;
-	}
-	if (bat1.y+bat1.height > 480) {
-		bat1.y = 480-bat1.height;
-	}
-	if (bat2.y < 0) {
-		bat2.y = 0;
-	}
-	if (bat2.y+bat2.height > 480) {
-		bat2.y = 480-bat2.height;
-	}
-
-	ball.x += ball.vel_x * ballspeed;
-	ball.y += ball.vel_y * ballspeed;
-
-	if (ball.y < 0) {
-		ball.y = 0;
-		ball.vel_y = 1;
-	}
-	if (ball.y+ball.height > 480) {
-		ball.y = 480-ball.height;
-		ball.vel_y = -1;
-	}
-
-	if (ball.x < 0) {
-		start = 1;
-		ball.x = (640 - ball.width) / 2;
-		ball.y = (480 - ball.height) / 2;
-		ball.vel_y = 0;
-		ball.vel_x = 0;
-		std::cout << std::endl;
-	}
-	if (ball.x+ball.width > 640) {
-		start = 1;
-		speed = 5;
-		ball.x = (640 - ball.width) / 2;
-		ball.y = (480 - ball.height) / 2;
-		ball.vel_y = 0;
-		ball.vel_x = 0;
-	}
-
-	if (is_intersecting(ball.x, ball.y, ball.width, ball.height, bat1.x, bat1.y, bat1.width, bat1.height)) {
-		ball.vel_x = 1;
-		speed += 1;
-	}
-
-	if (is_intersecting(ball.x, ball.y, ball.width, ball.height, bat2.x, bat2.y, bat2.width, bat2.height)) {
-		ball.vel_x = -1;
-		speed += 1;
-	}
-
-	glutPostRedisplay();
-	glutTimerFunc(15, onUpdate, 0);
-}
