@@ -12,20 +12,20 @@ void setup()
 }
 float s1pos = 0;
 float s2pos = 0;
-void moveBase(float ang)
+void move(float ang,int servo)
 {
    if (s1pos < ang)
   {
     for(float posicao = s1pos; posicao < ang; posicao +=.5)
       {
-         myservo.write(posicao);
+         if (servo == 1){myservo.write(posicao);}else{myservo2.write(posicao);}
          delay(15);
          SoftwareServo::refresh();
       } 
   }else{
      for(float posicao = s1pos; posicao > ang; posicao -=.5)
       {
-         myservo.write(posicao);
+         if (servo == 1){myservo.write(posicao);}else{myservo2.write(posicao);}
          delay(15);
          SoftwareServo::refresh();
       } 
@@ -33,51 +33,28 @@ void moveBase(float ang)
  s1pos = ang; 
 }
 
-void moveLaser(float ang)
-{
-  
-  if (s2pos < ang)
-  {
-    for(float posicao = s2pos; posicao < ang; posicao +=.5)
-      {
-         myservo2.write(posicao);
-         delay(15);
-         SoftwareServo::refresh();
-      } 
-  }else{
-     for(float posicao = s2pos; posicao > ang; posicao -=.5)
-      {
-         myservo2.write(posicao);
-         delay(15);
-         SoftwareServo::refresh();
-      } 
-  } 
-  
-  s2pos = ang;
-}
-
 void loop()
 {
-   moveLaser(10);
-   moveBase(10); 
+   move(10,2);
+   move(10,1); 
    delay(1000); 
-   moveLaser(120);
-   moveBase(80); 
-   moveLaser(120);
-   moveBase(80); 
+   move(120,2);
+   move(80,1); 
+   move(120,2);
+   move(80,1); 
    delay(1000);
-   moveLaser(110);
-   moveBase(76);
+   move(110,2);
+   move(76,1);
    delay(1000);
-   moveLaser(118);
+   move(118,2);
    delay(1000);
-   moveBase(70);
+   move(70,1);
    delay(1000);
-   moveBase(64);
+   move(64,1);
    delay(1000);
-   moveLaser(110);
+   move(110,2);
    delay(1000);
-   moveLaser(120);
-   moveBase(80); 
+   move(120,2);
+   move(80,1); 
    delay(60000);
 }
