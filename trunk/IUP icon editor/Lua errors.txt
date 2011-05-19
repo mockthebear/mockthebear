@@ -1,3 +1,0 @@
-
- -=FATAL ERROR=-: attempt to call a string value
- -=FATAL ERROR=-: attempt to call a string value
