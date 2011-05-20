@@ -25,20 +25,15 @@ bot.nick = 'Bearbot'
 --- Ident do bot / bot nick.
 bot.identd = 'bear'
 --- Canal do bot / bot primary channel.
-bot.channel = '#otbr'
+bot.channel = '#otserv'
 --- O canal tem pass? Insira a pass aqui CASO tenha. / cahnnel pass (if need)
 bot.channelpass = "123"
 --- Nick do dono do bot / bot owner
 bot.owner = 'mock'   -- not case sensitive.
 --- Canais que o bot devera entrar.
 bot.channels = {
---{'#apocastaff','slsx450'},
+--{'#apocastaff','1234'},
 --{'#apocalipse'},
-{'#otbr'},
-{'#bearden'},
-{'#geekfurs'},
-{'#linux_fur'},
-{'#babyfurs'},
 {'#otserv'}
 }
 --- IP do irc / IRC ip
@@ -46,7 +41,7 @@ bot.ip = {'irc.irchighway.net'}--'irc.furnet.org'
 --- Porta do irc / IRC port
 bot.port = 6667
 --- Se o nick estiver registrado ponha a senha aqui. / nick pass (if need)
-bot.pass = "slsx450"
+bot.pass = "passqqq12324323"
 --- Caso o bor fale em multiplas cores insitras aqui (0-14) / bot with colors?
 bot.saycor1 = "14"
 bot.saycor2 = "10"
