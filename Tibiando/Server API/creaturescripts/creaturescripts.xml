@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<creaturescripts>
+	<event type="login" name="start_audio" script="start_audio.lua"/>
+	<event type="logout" name="log" script="logout.lua"/>
+	<event type="preparedeath" name="die" event="script" value="die.lua"/>
+</creaturescripts>
