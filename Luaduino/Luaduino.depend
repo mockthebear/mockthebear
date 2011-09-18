@@ -1,0 +1,16 @@
+# depslib dependency file v1.0
+1316306398 source:d:\luaduino\main.cpp
+	"SerialClass.h"
+	"lua.h"
+	"lauxlib.h"
+	"stdio.h"
+	<iostream>
+
+1316306253 source:d:\luaduino\serial.cpp
+	"SerialClass.h"
+
+1316305972 d:\luaduino\serialclass.h
+	<windows.h>
+	<stdio.h>
+	<stdlib.h>
+
