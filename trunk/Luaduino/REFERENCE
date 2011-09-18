@@ -1,0 +1,5 @@
+Bool sucess, String error	luaduino.conectArduino(String porty)
+Bool sucess 				luaduino.writeData(String content,Int content:len)
+String content, Int len 	luaduino.readData(Int size)
+Bool conected				luaduino.isConected()
+String error				luaduino.getErrorMessage()
