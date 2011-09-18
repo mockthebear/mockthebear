@@ -17,7 +17,7 @@ LUACMODPATH= ""
 
 CC= gcc
 SOCC= $(CC) -shared $(LUADLLPATH)
-CFLAGS= -Wall -O2 -fomit-frame-pointer -lliblua.a
+CFLAGS= -Wall -O2 -fomit-frame-pointer -lua5.1.lib
 RM= del
 STRIP= strip --strip-unneeded
 INSTALL= copy
